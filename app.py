@@ -1,11 +1,10 @@
-import requests
+import streamlit as stimport requests
 
 API_KEY = "27eb4c6573548e562e26d6f70052f8bd"
 
 headers = {
     "x-apisports-key": API_KEY
-}
-st.title("Jogos de Hoje")
+}st.title("Jogos de Hoje")
 
 url = "https://v3.football.api-sports.io/fixtures?live=all"
 
