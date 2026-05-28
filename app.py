@@ -183,8 +183,7 @@ if resposta_jogos.status_code == 200:
     )
 
     fixture_id = lista_jogos[jogo_escolhido]
-
-    st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")
+      st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")
 
     # BUSCAR ESTATÍSTICAS
     stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
@@ -193,9 +192,8 @@ if resposta_jogos.status_code == 200:
 
     if resposta_stats.status_code == 200:
 
-        stats_data = resposta_stats.json()
-
-        st.subheader("📊 Leitura da IA")
+         stats_data = resposta_stats.json()
+          st.subheader("📊 Leitura da IA")
 
         try:
 
