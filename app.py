@@ -196,9 +196,9 @@ else:
 
  
 
-        st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
+    st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
 
-        st.write(f"🆔 Fixture ID: {fixture_id}")
+    st.write(f"🆔 Fixture ID: {fixture_id}")
 
 else:
     st.warning("Nenhum jogo encontrado")   
