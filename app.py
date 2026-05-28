@@ -177,8 +177,7 @@ if resposta_jogos.status_code == 200:
 
         lista_jogos[nome] = fixture_id
 ")
-    
-if len(lista_jogos) > 0:
+   if len(lista_jogos) > 0:
 
     jogo_escolhido = st.selectbox(
         "Escolha o jogo",
@@ -193,7 +192,8 @@ if len(lista_jogos) > 0:
         st.write(f"🆔 Fixture ID: {fixture_id}")
 
 else:
-    st.warning("Nenhum jogo encontrado
+    st.warning("Nenhum jogo encontrado 
+
     # BUSCAR ESTATÍSTICAS
     stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
 
