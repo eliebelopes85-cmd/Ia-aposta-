@@ -68,3 +68,70 @@ elif indice_pressao > 40:
     st.warning("⚠️ Pressão moderada")
 else:
     st.error("❄️ Jogo morno / baixo ritmo")
+# ===================================
+# DECISÃO FINAL DA IA
+# ===================================
+
+st.divider()
+
+st.header("🧠 DECISÃO DA IA")
+
+prob_gol = (
+    ataques_perigosos * 0.4 +
+    posse_bola * 0.2 +
+    chutes_gol * 0.4
+)
+
+st.metric("Probabilidade de Gol", f"{prob_gol:.1f}%")
+
+# ===================================
+# ALERTAS INTELIGENTES
+# ===================================
+
+if prob_gol >= 75:
+    st.success("🚨 ENTRADA FORTE PARA GOL")
+    
+elif prob_gol >= 60:
+    st.warning("⚠️ Jogo com tendência ofensiva")
+    
+else:
+    st.info("❄️ Mercado sem pressão suficiente")
+
+# ===================================
+# OVER 1.5
+# ===================================
+
+st.divider()
+
+st.subheader("📈 Mercado Over 1.5")
+
+if chutes_gol >= 10 and ataques_perigosos >= 70:
+    st.success("🔥 Forte tendência para OVER 1.5")
+else:
+    st.warning("⚠️ Over ainda sem confirmação")
+
+# ===================================
+# PRESSÃO EXTREMA
+# ===================================
+
+st.divider()
+
+st.subheader("🔥 Detector de Pressão")
+
+if indice_pressao >= 80:
+    st.error("🚨 PRESSÃO EXTREMA — GOL PODE SAIR A QUALQUER MOMENTO")
+    
+elif indice_pressao >= 65:
+    st.warning("⚠️ Pressão ofensiva alta")
+    
+else:
+    st.info("🧊 Jogo controlado")
+
+# ===================================
+# LEITURA TÁTICA
+# ===================================
+
+st.divider()
+
+st.subheader("🧠 Leitura Tática da IA")
+
