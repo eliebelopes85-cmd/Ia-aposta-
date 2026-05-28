@@ -173,8 +173,8 @@ if resposta_jogos.status_code == 200:
 
         nome = f"{casa} x {fora}"
 
-        fixture_id = jogo["fixture"]["idlista_jogos[nome] = fixture_id")
-   if len(lista_jogos) > 0:
+        fixture_id = jogo["fixture"]["idlista_jogos[nome] = 
+if len(lista_jogos) > 0:
 
     jogo_escolhido = st.selectbox(
         "Escolha o jogo",
@@ -182,39 +182,28 @@ if resposta_jogos.status_code == 200:
     )
 
     if jogo_escolhido:
-
         fixture_id = lista_jogos[jogo_escolhido]
-
         st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
         st.write(f"🆔 Fixture ID: {fixture_id}")
+        
+        # --- O BLOCO DE ESTATÍSTICAS DEVE ENTRAR AQUI ---
+        # BUSCAR ESTATÍSTICAS
+        stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?id={fixture_id}" # Ajuste a URL se necessário
+        resposta_stats = requests.get(stats_url, headers=headers)
 
+        if resposta_stats.status_code == 200:
+            stats_data = resposta_stats.json()
+            st.subheader("📊 Leitura da IA")
+
+            try:
+                time_casa = stats_data["response"][0]["team"]["name"]
+                time_fora = stats_data["response"][1]["team"]["name"]
+                st.write(f"🏠 Casa: {time_casa}")
+                # ... resto do seu código de leitura dos dados
+            except Exception as e:
+                st.error(f"Erro ao processar dados: {e}")
+                
 else:
-    st.warning("Nenhum jogo encontrado 
-
-    # BUSCAR ESTATÍSTICAS
-    stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
-
-    resposta_stats = requests.get(stats_url, headers=headers)
-
-    if resposta_stats.status_code == 200:
-
-         stats_data = resposta_stats.json()
-          st.subheader("📊 Leitura da IA")
-
-        try:
-
-            time_casa = stats_data["response"][0]["team"]["name"]
-            time_fora = stats_data["response"][1]["team"]["name"]
-
-            st.write(f"🏠 Casa: {time_casa}")
-            st.write(f"✈️ Fora: {time_fora}")
-
-            st.success("✅ Dados carregados")
-
-        except:
-
-            st.warning("⚠️ Estatísticas ainda não disponíveis")
-
-else:
-
-    st.error("Erro ao carregar jogos")
+    # O else agora serve apenas para quando a lista original estiver vazia
+    st.warning("Nenhum jogo encontrado")
+        
