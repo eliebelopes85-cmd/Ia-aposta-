@@ -194,6 +194,17 @@ if resposta_jogos.status_code == 200:
 else:
     st.warning("Nenhum jogo encontrado")
 
+    if jogo_escolhido:
+
+        fixture_id = lista_jogos[jogo_escolhido]
+
+        st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
+
+        st.write(f"🆔 Fixture ID: {fixture_id}")
+
+else:
+    st.warning("Nenhum jogo encontrado")
+
     st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")
 
     # BUSCAR ESTATÍSTICAS
