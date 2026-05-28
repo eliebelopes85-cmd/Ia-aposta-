@@ -175,11 +175,15 @@ if resposta_jogos.status_code == 200:
 
 
 if len(lista_jogos) > 0:
-    st.subheader("🧠 Jogos Monitorados pela IA")
-
-(st.subheader("🧠 Jogos Monitorados pela IA")
+  st.subheader("🧠 Jogos Monitorados pela IA")
 
 jogo_escolhido = st.selectbox(
+    "Escolha o jogo",
+    jogos_monitorados
+)
+
+st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")  
+(
     "Escolha o jogo",
     jogos_monitorados
 )
