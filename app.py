@@ -186,6 +186,7 @@ if live_response.status_code == 200:
 
 else:
     st.error("Erro ao buscar jogos ao vivo")
+pressao = (ataques_perigosos * 0.5) + (posse_bola * 0.3) + (chutes_gol * 1.5)
 if pressao > 75:
     st.success("🚨 Forte possibilidade de gol nos próximos minutos")
 
