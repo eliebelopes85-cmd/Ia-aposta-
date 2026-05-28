@@ -25,6 +25,23 @@ if response.status_code == 200:
         st.write(f"⚽ {casa} x {fora}")
         st.write(f"⏱️ {tempo} minutos")
         st.divider()
+# =========================
+# IA PROFISSIONAL
+# =========================
 
+st.subheader("🤖 IA Profissional")
+
+odd_casa = st.number_input("Odd Casa", value=1.80)
+odd_empate = st.number_input("Odd Empate", value=3.20)
+odd_fora = st.number_input("Odd Fora", value=4.50)
+
+prob_real = (1 / odd_casa) * 100
+
+st.write(f"📊 Probabilidade implícita Casa: {prob_real:.2f}%")
+
+if prob_real < 60:
+    st.success("🔥 Possível aposta de valor (EV+)")
 else:
-    st.error("Erro ao conectar API")
+    st.warning("⚠️ Mercado já precificou forte favoritismo")
+
+    
