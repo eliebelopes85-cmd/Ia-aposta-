@@ -146,7 +146,73 @@ elif posse_bola < 45 and ataques_perigosos < 40:
 st.divider()
 
 st.header("📺 Jogos Ao Vivo")
+st.divider()
 
+st.header("🧠 Análise Pré-Jogo")
+
+# BUSCAR JOGOS DO DIA
+from datetime import datetime
+
+hoje = datetime.today().strftime('%Y-%m-%d')
+
+url_jogos = f"https://v3.football.api-sports.io/fixtures?date={hoje}"
+
+resposta_jogos = requests.get(url_jogos, headers=headers)
+
+if resposta_jogos.status_code == 200:
+
+    dados_jogos = resposta_jogos.json()
+
+    lista_jogos = {}
+
+    for jogo in dados_jogos["response"]:
+
+        casa = jogo["teams"]["home"]["name"]
+        fora = jogo["teams"]["away"]["name"]
+
+        nome = f"{casa} x {fora}"
+
+        fixture_id = jogo["fixture"]["id"]
+
+        lista_jogos[nome] = fixture_id
+
+    jogo_escolhido = st.selectbox(
+        "Escolha o jogo",
+        list(lista_jogos.keys())
+    )
+
+    fixture_id = lista_jogos[jogo_escolhido]
+
+    st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")
+
+    # BUSCAR ESTATÍSTICAS
+    stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
+
+    resposta_stats = requests.get(stats_url, headers=headers)
+
+    if resposta_stats.status_code == 200:
+
+        stats_data = resposta_stats.json()
+
+        st.subheader("📊 Leitura da IA")
+
+        try:
+
+            time_casa = stats_data["response"][0]["team"]["name"]
+            time_fora = stats_data["response"][1]["team"]["name"]
+
+            st.write(f"🏠 Casa: {time_casa}")
+            st.write(f"✈️ Fora: {time_fora}")
+
+            st.success("✅ Dados carregados")
+
+        except:
+
+            st.warning("⚠️ Estatísticas ainda não disponíveis")
+
+else:
+
+    st.error("Erro ao carregar jogos")
 live_url = "https://v3.football.api-sports.io/fixtures?live=all"
 
 live_response = requests.get(live_url, headers=headers)
