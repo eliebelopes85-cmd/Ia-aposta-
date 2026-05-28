@@ -172,7 +172,7 @@ if resposta_jogos.status_code == 200:
         fora = jogo["teams"]["away"]["name"]
 
         nome = f"{casa} x {fora}"
-fixture_id = ["fixture"]["id"]
+fixture_id = ["fixture"]
 lista_jogos[nome] = fixture_id
 
          
