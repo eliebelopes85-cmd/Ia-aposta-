@@ -173,7 +173,7 @@ if resposta_jogos.status_code == 200:
 
         nome = f"{casa} x {fora}"
 
-        fixture_id = jogo["fixture"]["idlista_jogos[nome] = 
+   fixture_id = jogo["fixture"]["idlista_jogos[nome] =      
 if len(lista_jogos) > 0:
 
     jogo_escolhido = st.selectbox(
