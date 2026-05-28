@@ -134,4 +134,11 @@ else:
 st.divider()
 
 st.subheader("🧠 Leitura Tática da IA")
+if posse_bola > 60 and ataques_perigosos > 70:
+    st.success("📈 Time dominante ofensivamente")
 
+elif posse_bola < 45 and ataques_perigosos < 40:
+    st.warning("📉 Time recuado e sem criação")
+
+else:
+    st.info("⚖️ Jogo equilibrado")
