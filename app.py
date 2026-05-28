@@ -178,12 +178,12 @@ if resposta_jogos.status_code == 200:
 
 if len(lista_jogos) > 0:
 
-       jogo_escolhido = st.selectbox(
-           "Escolha o jogo",
-           list(lista_jogos.keys())
+    jogo_escolhido = st.selectbox(
+        "Escolha o jogo",
+        list(lista_jogos.keys())
     )
 
-if jogo_escolhido:
+    if jogo_escolhido:
 
         fixture_id = lista_jogos[jogo_escolhido]
 
@@ -193,12 +193,7 @@ if jogo_escolhido:
 
 else:
     st.warning("Nenhum jogo encontrado")
-
- 
-
-    st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
-
-    st.write(f"🆔 Fixture ID: {fixture_id}")
+    st.warning("Nenhum jogo encontrado")
 
 else:
     st.warning("Nenhum jogo encontrado")   
