@@ -139,6 +139,52 @@ if posse_bola > 60 and ataques_perigosos > 70:
 
 elif posse_bola < 45 and ataques_perigosos < 40:
     st.warning("📉 Time recuado e sem criação")
+# ===================================
+# JOGOS AO VIVO AUTOMÁTICOS
+# ===================================
 
+st.divider()
+
+st.header("📺 Jogos Ao Vivo")
+
+live_url = "https://v3.football.api-sports.io/fixtures?live=all"
+
+live_response = requests.get(live_url, headers=headers)
+
+if live_response.status_code == 200:
+
+    live_data = live_response.json()
+
+    jogos_live = live_data["response"]
+
+    if len(jogos_live) > 0:
+
+        lista_jogos = {}
+
+        for jogo in jogos_live:
+
+            casa = jogo["teams"]["home"]["name"]
+            fora = jogo["teams"]["away"]["name"]
+
+            nome_jogo = f"{casa} x {fora}"
+
+            lista_jogos[nome_jogo] = jogo["fixture"]["id"]
+
+        jogo_escolhido = st.selectbox(
+            "Selecione o jogo",
+            list(lista_jogos.keys())
+        )
+
+        fixture_id = lista_jogos[jogo_escolhido]
+
+        st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
+
+        st.write(f"🆔 Fixture ID: {fixture_id}")
+
+    else:
+        st.warning("Nenhum jogo ao vivo no momento")
+
+else:
+    st.error("Erro ao buscar jogos ao vivo")
 else:
     st.info("⚖️ Jogo equilibrado")
