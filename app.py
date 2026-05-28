@@ -176,14 +176,14 @@ if resposta_jogos.status_code == 200:
 
         lista_jogos[nome] = fixture_id
 
-    if len(lista_jogos) > 0:
+if len(lista_jogos) > 0:
 
        jogo_escolhido = st.selectbox(
            "Escolha o jogo",
            list(lista_jogos.keys())
     )
 
-    if jogo_escolhido:
+if jogo_escolhido:
 
         fixture_id = lista_jogos[jogo_escolhido]
 
