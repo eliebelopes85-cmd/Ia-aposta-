@@ -44,4 +44,27 @@ if prob_real < 60:
 else:
     st.warning("⚠️ Mercado já precificou forte favoritismo")
 
-    
+    # =========================
+# NÍVEL 4 — IA LIVE
+# =========================
+
+st.subheader("🔥 IA AO VIVO")
+
+ataques_perigosos = st.slider("Ataques perigosos", 0, 100, 65)
+posse_bola = st.slider("Posse de bola (%)", 0, 100, 58)
+chutes_gol = st.slider("Chutes no gol", 0, 20, 7)
+
+indice_pressao = (
+    ataques_perigosos * 0.5 +
+    posse_bola * 0.2 +
+    chutes_gol * 2
+)
+
+st.write(f"📈 Índice de pressão: {indice_pressao:.1f}")
+
+if indice_pressao > 60:
+    st.success("🚨 Forte possibilidade de gol nos próximos minutos")
+elif indice_pressao > 40:
+    st.warning("⚠️ Pressão moderada")
+else:
+    st.error("❄️ Jogo morno / baixo ritmo")
