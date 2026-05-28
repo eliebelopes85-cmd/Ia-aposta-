@@ -186,5 +186,11 @@ if live_response.status_code == 200:
 
 else:
     st.error("Erro ao buscar jogos ao vivo")
+if pressao > 75:
+    st.success("🚨 Forte possibilidade de gol nos próximos minutos")
+
+elif pressao > 60:
+    st.warning("🔥 Pressão ofensiva aumentando")
+
 else:
     st.info("⚖️ Jogo equilibrado")
