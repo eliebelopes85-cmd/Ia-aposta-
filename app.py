@@ -18,7 +18,7 @@ st.set_page_config(
 # AUTO REFRESH
 # =====================================================
 
-st_autorefresh(interval=30000, key="live_update")
+st_autorefresh(interval=30000, key="0354050b6f24a03a655e05cl268ef291")
 
 # =====================================================
 # API CONFIG
