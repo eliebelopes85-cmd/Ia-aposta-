@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import os
 # ===================================
 # CONFIGURAÇÃO
 # ===================================
@@ -11,7 +10,7 @@ st.set_page_config(
 )
 st.title("⚽ IA Trader Esportivo Profissional")
 # ===================================
-# API FOOTBALL
+# API CONFIG
 # ===================================
 API_KEY = "0354050b6f24a03a655e05cl268ef291"
 HEADERS = {
@@ -19,13 +18,14 @@ HEADERS = {
 }
 BASE_URL = "https://v3.football.api-sports.io"
 # ===================================
-# BUSCAR JOGOS AO VIVO
+# BUSCAR PRÓXIMOS JOGOS
 # ===================================
-st.subheader("📡 Jogos Ao Vivo")
+st.subheader("📡 Jogos do Dia")
 jogos_lista = []
 jogos_dict = {}
 try:
-    url = f"{BASE_URL}/fixtures?live=all"
+    # ALTERAÇÃO NOVA AQUI
+    url = f"{BASE_URL}/fixtures?next=20"
     response = requests.get(
         url,
         headers=HEADERS,
@@ -38,13 +38,14 @@ try:
             for jogo in jogos:
                 casa = jogo["teams"]["home"]["name"]
                 fora = jogo["teams"]["away"]["name"]
-                minuto = jogo["fixture"]["status"]["elapsed"]
+                horario = jogo["fixture"]["date"][11:16]
+                liga = jogo["league"]["name"]
                 fixture_id = jogo["fixture"]["id"]
-                texto = f"{casa} x {fora} ({minuto}')"
+                texto = f"{casa} x {fora} • {horario} • {liga}"
                 jogos_lista.append(texto)
                 jogos_dict[texto] = fixture_id
         else:
-            st.warning("Nenhum jogo ao vivo encontrado.")
+            st.warning("Nenhum jogo encontrado.")
     else:
         st.error(
             f"Erro API: {response.status_code}"
@@ -63,8 +64,9 @@ if len(jogos_lista) > 0:
         jogos_lista
     )
     fixture_id = jogos_dict[jogo_selecionado]
+    st.success(f"Jogo selecionado: {jogo_selecionado}")
 # ===================================
-# ODDS
+# MERCADO ODDS
 # ===================================
 st.subheader("💰 Mercado Odds")
 col1, col2, col3 = st.columns(3)
@@ -87,17 +89,17 @@ with col3:
         value=4.50
     )
 # ===================================
-# PROBABILIDADE
+# PROBABILIDADES
 # ===================================
+st.subheader("📊 Probabilidades")
 prob_casa = (1 / odd_casa) * 100
 prob_empate = (1 / odd_empate) * 100
 prob_fora = (1 / odd_fora) * 100
-st.subheader("📊 Probabilidades")
-st.write(f"Casa: {prob_casa:.2f}%")
-st.write(f"Empate: {prob_empate:.2f}%")
-st.write(f"Fora: {prob_fora:.2f}%")
+st.write(f"🏠 Casa: {prob_casa:.2f}%")
+st.write(f"🤝 Empate: {prob_empate:.2f}%")
+st.write(f"✈️ Fora: {prob_fora:.2f}%")
 if prob_casa > 60:
-    st.success("🔥 Forte favoritismo do mandante")
+    st.success("🔥 Forte favoritismo da equipe da casa")
 elif prob_fora > 60:
     st.success("🔥 Forte favoritismo visitante")
 else:
@@ -131,7 +133,7 @@ escanteios = st.slider(
     7
 )
 # ===================================
-# IA SCORE
+# SCORE IA
 # ===================================
 indice = (
     ataques * 0.5 +
@@ -145,7 +147,7 @@ st.metric(
     f"{indice:.1f}"
 )
 # ===================================
-# ALERTAS
+# ALERTAS IA
 # ===================================
 if indice > 80:
     st.success("🚨 ALERTA FORTE DE GOL")
@@ -176,7 +178,7 @@ else:
 ❌ Sem valor no momento.
 """)
 # ===================================
-# ESTATÍSTICAS
+# TABELA ESTATÍSTICAS
 # ===================================
 st.subheader("📋 Estatísticas")
 dados = {
