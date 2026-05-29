@@ -6,7 +6,9 @@ import pandas as pd
 # CONFIG
 # ===================================
 
-API_KEY = "0354050b6f24a03a655e05cl268ef291"
+import os
+
+API_KEY = os.getenv("API_FOOTBALL_KEY")
 
 headers = {
     "x-apisports-key": API_KEY
