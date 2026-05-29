@@ -1,226 +1,494 @@
-import streamlit as st
-import requests
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: IA Trader Esportivo API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: fixtures
+    description: Football fixtures and statistics
+  - name: odds
+    description: Odds scanning and analysis
+  - name: analysis
+    description: AI analysis and alerts
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
 
-API_KEY = "27eb4c6573548e562e26d6f70052f8bd"
+  /fixtures/today:
+    get:
+      operationId: getTodayFixtures
+      tags: [fixtures]
+      summary: Get today's fixtures
+      responses:
+        "200":
+          description: List of today's fixtures
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fixture"
 
-headers = {
-    "x-apisports-key": API_KEY
-}
-st.title("Jogos de Hoje")
+  /fixtures/{fixtureId}/statistics:
+    get:
+      operationId: getFixtureStatistics
+      tags: [fixtures]
+      summary: Get live statistics for a fixture
+      parameters:
+        - name: fixtureId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fixture statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FixtureStatistics"
+        "404":
+          description: Fixture not found
 
-url = "https://v3.football.api-sports.io/fixtures?live=all"
+  /fixtures/{fixtureId}/analysis:
+    post:
+      operationId: analyzeFixture
+      tags: [analysis]
+      summary: Run AI analysis on a fixture with given odds
+      parameters:
+        - name: fixtureId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysisInput"
+      responses:
+        "200":
+          description: AI analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
 
-response = requests.get(url, headers=headers)
+  /odds/scan:
+    get:
+      operationId: scanOdds
+      tags: [odds]
+      summary: Scan live odds from all sports
+      responses:
+        "200":
+          description: Odds scan results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OddsEntry"
 
-if response.status_code == 200:
-    data = response.json()
+  /odds/trap-detector:
+    post:
+      operationId: detectTrap
+      tags: [odds]
+      summary: Detect if a market is a trap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrapInput"
+      responses:
+        "200":
+          description: Trap detection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrapResult"
 
-    jogos = data["response"]
+  /analysis/over25:
+    post:
+      operationId: analyzeOver25
+      tags: [analysis]
+      summary: Analyze Over 2.5 market for a fixture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketAnalysisInput"
+      responses:
+        "200":
+          description: Over 2.5 analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketAnalysisResult"
 
-    for jogo in jogos:
-        casa = jogo["teams"]["home"]["name"]
-        fora = jogo["teams"]["away"]["name"]
-        tempo = jogo["fixture"]["status"]["elapsed"]
+  /analysis/corners:
+    post:
+      operationId: analyzeCorners
+      tags: [analysis]
+      summary: Analyze corners market for a fixture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketAnalysisInput"
+      responses:
+        "200":
+          description: Corners analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketAnalysisResult"
 
-        st.write(f"⚽ {casa} x {fora}")
-        st.write(f"⏱️ {tempo} minutos")
-        st.divider()
-# =========================
-# IA PROFISSIONAL
-# =========================
+  /analysis/btts:
+    post:
+      operationId: analyzeBtts
+      tags: [analysis]
+      summary: Analyze BTTS (Both Teams To Score) market
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketAnalysisInput"
+      responses:
+        "200":
+          description: BTTS analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketAnalysisResult"
 
-st.subheader("🤖 IA Profissional")
+  /history:
+    get:
+      operationId: listHistory
+      tags: [analysis]
+      summary: List all saved analysis history
+      responses:
+        "200":
+          description: List of history entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+    post:
+      operationId: saveHistory
+      tags: [analysis]
+      summary: Save an analysis to history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveAnalysisHistoryBody"
+      responses:
+        "201":
+          description: Saved history entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryEntry"
+    delete:
+      operationId: clearHistory
+      tags: [analysis]
+      summary: Clear all history
+      responses:
+        "204":
+          description: History cleared
 
-odd_casa = st.number_input("Odd Casa", value=1.80)
-odd_empate = st.number_input("Odd Empate", value=3.20)
-odd_fora = st.number_input("Odd Fora", value=4.50)
+  /history/{id}/result:
+    patch:
+      operationId: updateHistoryResult
+      tags: [analysis]
+      summary: Update the result of a history entry (WIN/LOSS/VOID)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetHistoryResultBody"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryEntry"
+        "404":
+          description: Entry not found
 
-prob_real = (1 / odd_casa) * 100
+  /analysis/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [analysis]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
 
-st.write(f"📊 Probabilidade implícita Casa: {prob_real:.2f}%")
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
 
-if prob_real < 60:
-    st.success("🔥 Possível aposta de valor (EV+)")
-else:
-    st.warning("⚠️ Mercado já precificou forte favoritismo")
+    Fixture:
+      type: object
+      required: [id, homeTeam, awayTeam, league, date, status]
+      properties:
+        id:
+          type: integer
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        league:
+          type: string
+        date:
+          type: string
+        status:
+          type: string
+        homeGoals:
+          type: ["integer", "null"]
+        awayGoals:
+          type: ["integer", "null"]
 
-    # =========================
-# NÍVEL 4 — IA LIVE
-# =========================
+    FixtureStatistics:
+      type: object
+      required: [fixtureId, homePossession, awayPossession, homeShotsOnGoal, awayShotsOnGoal, homeCorners, awayCorners, homeAttacks, awayAttacks]
+      properties:
+        fixtureId:
+          type: integer
+        homePossession:
+          type: number
+        awayPossession:
+          type: number
+        homeShotsOnGoal:
+          type: integer
+        awayShotsOnGoal:
+          type: integer
+        homeCorners:
+          type: integer
+        awayCorners:
+          type: integer
+        homeAttacks:
+          type: integer
+        awayAttacks:
+          type: integer
 
-st.subheader("🔥 IA AO VIVO")
+    AnalysisInput:
+      type: object
+      required: [oddHome, oddDraw, oddAway, oddOver25]
+      properties:
+        oddHome:
+          type: number
+        oddDraw:
+          type: number
+        oddAway:
+          type: number
+        oddOver25:
+          type: number
+        oddBtts:
+          type: ["number", "null"]
 
-ataques_perigosos = st.slider("Ataques perigosos", 0, 100, 65)
-posse_bola = st.slider("Posse de bola (%)", 0, 100, 58)
-chutes_gol = st.slider("Chutes no gol", 0, 20, 7)
+    AnalysisResult:
+      type: object
+      required: [score, level, alerts, recommendation]
+      properties:
+        score:
+          type: integer
+        level:
+          type: string
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+        recommendation:
+          type: string
 
-indice_pressao = (
-    ataques_perigosos * 0.5 +
-    posse_bola * 0.2 +
-    chutes_gol * 2
-)
+    Alert:
+      type: object
+      required: [type, message]
+      properties:
+        type:
+          type: string
+        message:
+          type: string
 
-st.write(f"📈 Índice de pressão: {indice_pressao:.1f}")
+    OddsEntry:
+      type: object
+      required: [game, bookmaker, market, team, odd]
+      properties:
+        game:
+          type: string
+        bookmaker:
+          type: string
+        market:
+          type: string
+        team:
+          type: string
+        odd:
+          type: number
 
-if indice_pressao > 60:
-    st.success("🚨 Forte possibilidade de gol nos próximos minutos")
-elif indice_pressao > 40:
-    st.warning("⚠️ Pressão moderada")
-else:
-    st.error("❄️ Jogo morno / baixo ritmo")
-# ===================================
-# DECISÃO FINAL DA IA
-# ===================================
+    TrapInput:
+      type: object
+      required: [oddFavorite, possession, attacks]
+      properties:
+        oddFavorite:
+          type: number
+        possession:
+          type: number
+        attacks:
+          type: number
 
-st.divider()
+    TrapResult:
+      type: object
+      required: [isTrap, riskLevel, message, factors]
+      properties:
+        isTrap:
+          type: boolean
+        riskLevel:
+          type: string
+        message:
+          type: string
+        factors:
+          type: array
+          items:
+            type: string
 
-st.header("🧠 DECISÃO DA IA")
+    MarketAnalysisInput:
+      type: object
+      required: [fixtureId, odd]
+      properties:
+        fixtureId:
+          type: integer
+        odd:
+          type: number
 
-prob_gol = (
-    ataques_perigosos * 0.4 +
-    posse_bola * 0.2 +
-    chutes_gol * 0.4
-)
+    MarketAnalysisResult:
+      type: object
+      required: [market, score, recommendation, confidence, factors]
+      properties:
+        market:
+          type: string
+        score:
+          type: integer
+        recommendation:
+          type: string
+        confidence:
+          type: string
+        factors:
+          type: array
+          items:
+            type: string
 
-st.metric("Probabilidade de Gol", f"{prob_gol:.1f}%")
+    HistoryEntry:
+      type: object
+      required: [id, market, homeTeam, awayTeam, league, score, level, recommendation, odd, createdAt]
+      properties:
+        id:
+          type: integer
+        market:
+          type: string
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        league:
+          type: string
+        fixtureId:
+          type: ["integer", "null"]
+        score:
+          type: integer
+        level:
+          type: string
+        recommendation:
+          type: string
+        odd:
+          type: string
+        result:
+          type: ["string", "null"]
+        createdAt:
+          type: string
 
-# ===================================
-# ALERTAS INTELIGENTES
-# ===================================
+    SaveAnalysisHistoryBody:
+      type: object
+      required: [market, homeTeam, awayTeam, score, level, recommendation, odd]
+      properties:
+        market:
+          type: string
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        league:
+          type: string
+        fixtureId:
+          type: ["integer", "null"]
+        score:
+          type: integer
+        level:
+          type: string
+        recommendation:
+          type: string
+        odd:
+          type: number
 
-if prob_gol >= 75:
-    st.success("🚨 ENTRADA FORTE PARA GOL")
-    
-elif prob_gol >= 60:
-    st.warning("⚠️ Jogo com tendência ofensiva")
-    
-else:
-    st.info("❄️ Mercado sem pressão suficiente")
+    SetHistoryResultBody:
+      type: object
+      required: [result]
+      properties:
+        result:
+          type: string
 
-# ===================================
-# OVER 1.5
-# ===================================
-
-st.divider()
-
-st.subheader("📈 Mercado Over 1.5")
-
-if chutes_gol >= 10 and ataques_perigosos >= 70:
-    st.success("🔥 Forte tendência para OVER 1.5")
-else:
-    st.warning("⚠️ Over ainda sem confirmação")
-
-# ===================================
-# PRESSÃO EXTREMA
-# ===================================
-
-st.divider()
-
-st.subheader("🔥 Detector de Pressão")
-
-if indice_pressao >= 80:
-    st.error("🚨 PRESSÃO EXTREMA — GOL PODE SAIR A QUALQUER MOMENTO")
-    
-elif indice_pressao >= 65:
-    st.warning("⚠️ Pressão ofensiva alta")
-    
-else:
-    st.info("🧊 Jogo controlado")
-
-# ===================================
-# LEITURA TÁTICA
-# ===================================
-
-st.divider()
-
-st.subheader("🧠 Leitura Tática da IA")
-if posse_bola > 60 and ataques_perigosos > 70:
-    st.success("📈 Time dominante ofensivamente")
-
-elif posse_bola < 45 and ataques_perigosos < 40:
-    st.warning("📉 Time recuado e sem criação")
-#===================================
-# JOGOS AO VIVO AUTOMÁTICOS
-# ===================================
-
-st.divider()
-
-st.header("📺 Jogos Ao Vivo")
-st.divider()
-st.divider()
-
-st.header("🧠 Análise Pré-Jogo")
-
-# BUSCAR JOGOS DO DIA
-from datetime import datetime
-
-hoje = datetime.today().strftime('%Y-%m-%d')
-
-url_jogos = f"https://v3.football.api-sports.io/fixtures?date={hoje}"
-
-resposta_jogos = requests.get(url_jogos, headers=headers)
-
-if resposta_jogos.status_code == 200:
-
-    dados_jogos = resposta_jogos.json()
-
-    lista_jogos = {}
-
-    for jogo in dados_jogos["response"]:
-
-        casa = jogo["teams"]["home"]["name"]
-        fora = jogo["teams"]["away"]["name"]
-
-        nome = f"{casa} x {fora}"
-
-
-if len(lista_jogos) > 0:
-  st.subheader("🧠 Jogos Monitorados pela IA")
-
-jogo_escolhido = st.selectbox(
-    "Escolha o jogo",
-    jogos_monitorados
-)
-
-st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")  
-(
-    "Escolha o jogo",
-    jogos_monitorados
-)
-
-st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")
-    "Escolha o jogo",
-    jogos_monitorados
-)
-
-st.success(f"🎯 Jogo selecionado: {jogo_escolhido}")(
-        "Escolha o jogo",
-        list(lista_jogos.keys())
-    )
-
-    if jogo_escolhido:
-        fixture_id = lista_jogos[jogo_escolhido]
-        st.success(f"🎯 Jogo monitorado: {jogo_escolhido}")
-        st.write(f"🆔 Fixture ID: {fixture_id}")
-        
-        # --- O BLOCO DE ESTATÍSTICAS DEVE ENTRAR AQUI ---
-        # BUSCAR ESTATÍSTICAS
-        stats_url = f"https://v3.football.api-sports.io/fixtures/statistics?id={fixture_id}" # Ajuste a URL se necessário
-        resposta_stats = requests.get(stats_url, headers=headers)
-
-        if resposta_stats.status_code == 200:
-            stats_data = resposta_stats.json()
-            st.subheader("📊 Leitura da IA")
-
-            try:
-                time_casa = stats_data["response"][0]["team"]["name"]
-                time_fora = stats_data["response"][1]["team"]["name"]
-                st.write(f"🏠 Casa: {time_casa}")
-                # ... resto do seu código de leitura dos dados
-            except Exception as e:
-                st.error(f"Erro ao processar dados: {e}")
-                
-else:
-    # O else agora serve apenas para quando a lista original estiver vazia
-    st.warning("Nenhum jogo encontrado")
-        
+    DashboardSummary:
+      type: object
+      required: [totalFixturesToday, hotGames, trapAlerts, topLeagues]
+      properties:
+        totalFixturesToday:
+          type: integer
+        hotGames:
+          type: integer
+        trapAlerts:
+          type: integer
+        topLeagues:
+          type: array
+          items:
+            type: string
