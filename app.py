@@ -162,7 +162,8 @@ def renderizar_radar_ia(jogo):
             corners_fora
         )
     st.markdown("---")
-st.success(f"""
+  
+    st.success(f"""
 📊 TENDÊNCIA IA:
 
 {tendencia}
