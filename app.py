@@ -162,14 +162,22 @@ def renderizar_radar_ia(jogo):
             corners_fora
         )
     st.markdown("---")
-    st.success(f"""
+st.success(f"""
 📊 TENDÊNCIA IA:
+
 {tendencia}
+
 🔥 Mercado recomendado:
+
 ✅ Over 1.5
+
 ✅ Over Escanteios
+
 ✅ Próximo Gol
+
 ✅ Ambas Marcam
+
 ✅ Pressão Ofensiva
+
 🚨 Sistema IA Trader PRO
-""
+""")
