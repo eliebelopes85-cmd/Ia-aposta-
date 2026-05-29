@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import os
 from datetime import datetime
-from streamlit_autorefresh import st_autorefresh
+
 
 
 # =====================================================
@@ -19,7 +19,7 @@ st.set_page_config(
 # AUTO REFRESH
 # =====================================================
 
-st_autorefresh(interval=30000, key="live_update")
+
 
 # =====================================================
 # API CONFIG
