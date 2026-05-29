@@ -1,9 +1,12 @@
 import streamlit as st
 import requests
+import pandas as pd
+import time
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
 
 # =====================================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIG APP
 # =====================================================
 
 st.set_page_config(
@@ -12,103 +15,84 @@ st.set_page_config(
 )
 
 # =====================================================
-# API KEY
+# AUTO REFRESH
 # =====================================================
 
-API_KEY = "SUA_API_KEY"
+st_autorefresh(interval=30000, key="live_update")
+
+# =====================================================
+# API CONFIG
+# =====================================================
+
+API_KEY = "0354050b6f24a03a655e05cl268ef291"
 
 HEADERS = {
     "x-apisports-key": API_KEY
 }
 
 # =====================================================
-# FUNÇÃO BUSCAR JOGOS AO VIVO
+# FUNÇÕES API
 # =====================================================
 
-def buscar_jogos():
+def buscar_jogos_ao_vivo():
 
-    try:
+    url = "https://v3.football.api-sports.io/fixtures?live=all"
 
-        url = "https://v3.football.api-sports.io/fixtures?live=all"
+    response = requests.get(url, headers=HEADERS)
 
-        response = requests.get(url, headers=HEADERS)
+    if response.status_code == 200:
+        return response.json()["response"]
 
-        data = response.json()
-
-        if "response" in data:
-            return data["response"]
-
-        return []
-
-    except Exception as erro:
-
-        st.error(f"Erro API: {erro}")
-
-        return []
+    return []
 
 # =====================================================
-# FUNÇÃO BUSCAR ESTATÍSTICAS
+# BUSCAR ESTATÍSTICAS
 # =====================================================
 
 def buscar_estatisticas(fixture_id):
 
-    try:
+    url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
 
-        url = f"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixture_id}"
+    response = requests.get(url, headers=HEADERS)
 
-        response = requests.get(url, headers=HEADERS)
+    if response.status_code == 200:
+        return response.json()["response"]
 
-        data = response.json()
-
-        if "response" in data:
-            return data["response"]
-
-        return []
-
-    except Exception as erro:
-
-        st.error(f"Erro Estatísticas: {erro}")
-
-        return []
+    return []
 
 # =====================================================
-# EXTRAIR VALORES
+# EXTRAIR ESTATÍSTICAS
 # =====================================================
 
-def pegar_estatistica(stats, tipo):
+def extrair_valor(stats, tipo):
 
-    try:
+    for item in stats:
 
-        for item in stats:
+        if item["type"] == tipo:
 
-            if item["type"] == tipo:
+            valor = item["value"]
 
-                valor = item["value"]
+            if valor is None:
+                return 0
 
-                if valor is None:
+            if isinstance(valor, str):
+
+                valor = valor.replace("%", "")
+
+                try:
+                    return float(valor)
+                except:
                     return 0
 
-                if isinstance(valor, str):
+            return valor
 
-                    valor = valor.replace("%", "")
-
-                    try:
-                        return float(valor)
-                    except:
-                        return 0
-
-                return valor
-
-        return 0
-
-    except:
-        return 0
+    return 0
 
 # =====================================================
-# IA PRESSÃO
+# MOTOR IA
 # =====================================================
 
-def calcular_score(
+def calcular_pressao(
     posse,
     ataques,
     finalizacoes,
@@ -116,26 +100,21 @@ def calcular_score(
     escanteios
 ):
 
-    try:
+    score = (
+        posse * 0.15 +
+        ataques * 0.30 +
+        finalizacoes * 4 +
+        finalizacoes_gol * 6 +
+        escanteios * 2
+    )
 
-        score = (
-            posse * 0.15 +
-            ataques * 0.30 +
-            finalizacoes * 4 +
-            finalizacoes_gol * 6 +
-            escanteios * 2
-        )
-
-        return round(score, 2)
-
-    except:
-        return 0
+    return round(score, 2)
 
 # =====================================================
-# ALERTA IA
+# PROBABILIDADE GOL
 # =====================================================
 
-def gerar_alerta(score):
+def probabilidade_gol(score):
 
     if score >= 90:
         return "🔥 EXTREMAMENTE FORTE"
@@ -150,7 +129,7 @@ def gerar_alerta(score):
         return "❄️ BAIXA PRESSÃO"
 
 # =====================================================
-# CABEÇALHO
+# TÍTULO
 # =====================================================
 
 st.title("⚽ Esportivo PRO IA")
@@ -158,17 +137,10 @@ st.title("⚽ Esportivo PRO IA")
 st.markdown("---")
 
 # =====================================================
-# BOTÃO ATUALIZAR
-# =====================================================
-
-if st.button("🔄 Atualizar Jogos"):
-    st.rerun()
-
-# =====================================================
 # BUSCAR JOGOS
 # =====================================================
 
-jogos = buscar_jogos()
+jogos = buscar_jogos_ao_vivo()
 
 # =====================================================
 # SEM JOGOS
@@ -179,215 +151,168 @@ if len(jogos) == 0:
     st.warning("Nenhum jogo ao vivo encontrado.")
 
 # =====================================================
-# LOOP DOS JOGOS
+# LOOP JOGOS
 # =====================================================
 
 for jogo in jogos:
 
-    try:
+    fixture_id = jogo["fixture"]["id"]
 
-        fixture_id = jogo["fixture"]["id"]
+    minuto = jogo["fixture"]["status"]["elapsed"]
 
-        minuto = jogo["fixture"]["status"]["elapsed"]
+    liga = jogo["league"]["name"]
 
-        status = jogo["fixture"]["status"]["short"]
+    time_casa = jogo["teams"]["home"]["name"]
 
-        liga = jogo["league"]["name"]
+    time_fora = jogo["teams"]["away"]["name"]
 
-        time_casa = jogo["teams"]["home"]["name"]
+    gols_casa = jogo["goals"]["home"]
 
-        time_fora = jogo["teams"]["away"]["name"]
+    gols_fora = jogo["goals"]["away"]
 
-        gols_casa = jogo["goals"]["home"]
+    # =================================================
+    # HEADER JOGO
+    # =================================================
 
-        gols_fora = jogo["goals"]["away"]
+    st.markdown("---")
 
-        # =================================================
-        # CABEÇALHO JOGO
-        # =================================================
+    st.subheader(
+        f"⚽ {time_casa} {gols_casa} x {gols_fora} {time_fora}"
+    )
 
-        st.markdown("---")
+    st.write(f"🏆 Liga: {liga}")
 
-        st.subheader(
-            f"⚽ {time_casa} {gols_casa} x {gols_fora} {time_fora}"
-        )
+    st.write(f"⏱️ Minuto: {minuto}")
 
-        col_a, col_b, col_c = st.columns(3)
+    # =================================================
+    # ESTATÍSTICAS
+    # =================================================
 
-        with col_a:
-            st.metric("⏱️ Minuto", minuto)
+    estatisticas = buscar_estatisticas(fixture_id)
 
-        with col_b:
-            st.metric("🏆 Liga", liga)
+    if len(estatisticas) < 2:
 
-        with col_c:
-            st.metric("📡 Status", status)
+        st.warning("Sem estatísticas disponíveis.")
 
-        # =================================================
-        # ESTATÍSTICAS
-        # =================================================
+        continue
 
-        estatisticas = buscar_estatisticas(fixture_id)
+    home_stats = estatisticas[0]["statistics"]
 
-        if len(estatisticas) < 2:
+    away_stats = estatisticas[1]["statistics"]
 
-            st.warning("Sem estatísticas disponíveis.")
+    # =================================================
+    # CASA
+    # =================================================
 
-            continue
+    posse_casa = extrair_valor(home_stats, "Ball Possession")
 
-        home_stats = estatisticas[0]["statistics"]
+    ataques_casa = extrair_valor(home_stats, "Dangerous Attacks")
 
-        away_stats = estatisticas[1]["statistics"]
+    finalizacoes_casa = extrair_valor(home_stats, "Total Shots")
 
-        # =================================================
-        # CASA
-        # =================================================
+    finalizacoes_gol_casa = extrair_valor(home_stats, "Shots on Goal")
 
-        posse_casa = pegar_estatistica(
-            home_stats,
-            "Ball Possession"
-        )
+    escanteios_casa = extrair_valor(home_stats, "Corner Kicks")
 
-        ataques_casa = pegar_estatistica(
-            home_stats,
-            "Dangerous Attacks"
-        )
+    # =================================================
+    # FORA
+    # =================================================
 
-        finalizacoes_casa = pegar_estatistica(
-            home_stats,
-            "Total Shots"
-        )
+    posse_fora = extrair_valor(away_stats, "Ball Possession")
 
-        finalizacoes_gol_casa = pegar_estatistica(
-            home_stats,
-            "Shots on Goal"
-        )
+    ataques_fora = extrair_valor(away_stats, "Dangerous Attacks")
 
-        escanteios_casa = pegar_estatistica(
-            home_stats,
-            "Corner Kicks"
-        )
+    finalizacoes_fora = extrair_valor(away_stats, "Total Shots")
 
-        # =================================================
-        # FORA
-        # =================================================
+    finalizacoes_gol_fora = extrair_valor(away_stats, "Shots on Goal")
 
-        posse_fora = pegar_estatistica(
-            away_stats,
-            "Ball Possession"
-        )
+    escanteios_fora = extrair_valor(away_stats, "Corner Kicks")
 
-        ataques_fora = pegar_estatistica(
-            away_stats,
-            "Dangerous Attacks"
-        )
+    # =================================================
+    # IA SCORE
+    # =================================================
 
-        finalizacoes_fora = pegar_estatistica(
-            away_stats,
-            "Total Shots"
-        )
+    score_casa = calcular_pressao(
+        posse_casa,
+        ataques_casa,
+        finalizacoes_casa,
+        finalizacoes_gol_casa,
+        escanteios_casa
+    )
 
-        finalizacoes_gol_fora = pegar_estatistica(
-            away_stats,
-            "Shots on Goal"
-        )
+    score_fora = calcular_pressao(
+        posse_fora,
+        ataques_fora,
+        finalizacoes_fora,
+        finalizacoes_gol_fora,
+        escanteios_fora
+    )
 
-        escanteios_fora = pegar_estatistica(
-            away_stats,
-            "Corner Kicks"
-        )
+    # =================================================
+    # COLUNAS
+    # =================================================
 
-        # =================================================
-        # SCORE IA
-        # =================================================
+    col1, col2 = st.columns(2)
 
-        score_casa = calcular_score(
-            posse_casa,
-            ataques_casa,
-            finalizacoes_casa,
-            finalizacoes_gol_casa,
-            escanteios_casa
-        )
+    # =================================================
+    # CASA
+    # =================================================
 
-        score_fora = calcular_score(
-            posse_fora,
-            ataques_fora,
-            finalizacoes_fora,
-            finalizacoes_gol_fora,
-            escanteios_fora
-        )
+    with col1:
 
-        # =================================================
-        # COLUNAS
-        # =================================================
+        st.markdown(f"## 🏠 {time_casa}")
 
-        col1, col2 = st.columns(2)
+        st.metric("Posse", f"{posse_casa}%")
 
-        # =================================================
-        # TIME CASA
-        # =================================================
+        st.metric("Ataques", ataques_casa)
 
-        with col1:
+        st.metric("Finalizações", finalizacoes_casa)
 
-            st.markdown(f"## 🏠 {time_casa}")
+        st.metric("Finalizações no Gol", finalizacoes_gol_casa)
 
-            st.metric("Posse", f"{posse_casa}%")
+        st.metric("Escanteios", escanteios_casa)
 
-            st.metric("Ataques", ataques_casa)
+        st.metric("Score IA", score_casa)
 
-            st.metric("Finalizações", finalizacoes_casa)
+    # =================================================
+    # FORA
+    # =================================================
 
-            st.metric(
-                "Finalizações no Gol",
-                finalizacoes_gol_casa
-            )
+    with col2:
 
-            st.metric("Escanteios", escanteios_casa)
+        st.markdown(f"## ✈️ {time_fora}")
 
-            st.metric("Score IA", score_casa)
+        st.metric("Posse", f"{posse_fora}%")
 
-        # =================================================
-        # TIME FORA
-        # =================================================
+        st.metric("Ataques", ataques_fora)
 
-        with col2:
+        st.metric("Finalizações", finalizacoes_fora)
 
-            st.markdown(f"## ✈️ {time_fora}")
+        st.metric("Finalizações no Gol", finalizacoes_gol_fora)
 
-            st.metric("Posse", f"{posse_fora}%")
+        st.metric("Escanteios", escanteios_fora)
 
-            st.metric("Ataques", ataques_fora)
+        st.metric("Score IA", score_fora)
 
-            st.metric("Finalizações", finalizacoes_fora)
+    # =================================================
+    # IA RESULTADO
+    # =================================================
 
-            st.metric(
-                "Finalizações no Gol",
-                finalizacoes_gol_fora
-            )
+    st.markdown("---")
 
-            st.metric("Escanteios", escanteios_fora)
+    st.subheader("📈 Resultado IA")
 
-            st.metric("Score IA", score_fora)
+    alerta_casa = probabilidade_gol(score_casa)
 
-        # =================================================
-        # RESULTADO IA
-        # =================================================
+    alerta_fora = probabilidade_gol(score_fora)
 
-        st.markdown("---")
+    # =================================================
+    # ANÁLISE CASA
+    # =================================================
 
-        st.subheader("📈 Resultado IA")
+    if score_casa > score_fora:
 
-        alerta_casa = gerar_alerta(score_casa)
-
-        alerta_fora = gerar_alerta(score_fora)
-
-        # =================================================
-        # ANÁLISE CASA
-        # =================================================
-
-        if score_casa > score_fora:
-
-            st.success(f"""
+        st.success(f"""
 🔥 FORTE TENDÊNCIA CASA
 
 ✅ Próximo Gol Casa
@@ -403,15 +328,15 @@ for jogo in jogos:
 📊 Score Fora: {score_fora}
 
 🚨 ALERTA: {alerta_casa}
-            """)
+        """)
 
-        # =================================================
-        # ANÁLISE FORA
-        # =================================================
+    # =================================================
+    # ANÁLISE FORA
+    # =================================================
 
-        elif score_fora > score_casa:
+    elif score_fora > score_casa:
 
-            st.error(f"""
+        st.error(f"""
 🔥 FORTE TENDÊNCIA FORA
 
 ✅ Próximo Gol Fora
@@ -427,30 +352,26 @@ for jogo in jogos:
 📊 Score Fora: {score_fora}
 
 🚨 ALERTA: {alerta_fora}
-            """)
+        """)
 
-        # =================================================
-        # EQUILIBRADO
-        # =================================================
+    # =================================================
+    # EQUILIBRADO
+    # =================================================
 
-        else:
+    else:
 
-            st.warning("""
+        st.warning("""
 ⚖️ Jogo equilibrado
 
-✅ Ambas Marcam
+✅ Mercado Ambas Marcam
 
 ✅ Over Escanteios
 
 ⚠️ Sem tendência clara
-            """)
-
-    except Exception as erro:
-
-        st.error(f"Erro no jogo: {erro}")
+        """)
 
 # =====================================================
-# RODAPÉ
+# FOOTER
 # =====================================================
 
 st.markdown("---")
