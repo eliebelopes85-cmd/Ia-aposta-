@@ -6,7 +6,7 @@ import pandas as pd
 # CONFIG
 # ===================================
 
-API_KEY = "SUA_API_KEY"
+API_KEY = "0354050b6f24a03a655e05cl268ef291"
 
 headers = {
     "x-apisports-key": API_KEY
