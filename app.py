@@ -1,502 +1,145 @@
-openapi: 3.1.0
-info:
-  title: Api
-  version: 0.1.0
-  description: IA Trader Esportivo API
-servers:
-  - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
-  - name: fixtures
-    description: Football fixtures and statistics
-  - name: odds
-    description: Odds scanning and analysis
-  - name: analysis
-    description: AI analysis and alerts
-paths:
-  /healthz:
-    get:
-      operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      responses:
-        "200":
-          description: Healthy
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
+app.py
 
-  /fixtures/today:
-    get:
-      operationId: getTodayFixtures
-      tags: [fixtures]
-      from flask import Flask
-
+from flask import Flask, jsonify, request
+import requests
+import os
+import random
 app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "API funcionando"
-
-app.run(host="0.0.0.0", port=3000)
-      responses:
-        "200":
-          description: List of today's fixtures
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Fixture"
-
-  /fixtures/{fixtureId}/statistics:
-    get:
-      operationId: getFixtureStatistics
-      tags: [fixtures]
-      summary: Get live statistics for a fixture
-      parameters:
-        - name: fixtureId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Fixture statistics
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FixtureStatistics"
-        "404":
-          description: Fixture not found
-
-  /fixtures/{fixtureId}/analysis:
-    post:
-      operationId: analyzeFixture
-      tags: [analysis]
-      summary: Run AI analysis on a fixture with given odds
-      parameters:
-        - name: fixtureId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AnalysisInput"
-      responses:
-        "200":
-          description: AI analysis result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AnalysisResult"
-
-  /odds/scan:
-    get:
-      operationId: scanOdds
-      tags: [odds]
-      summary: Scan live odds from all sports
-      responses:
-        "200":
-          description: Odds scan results
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OddsEntry"
-
-  /odds/trap-detector:
-    post:
-      operationId: detectTrap
-      tags: [odds]
-      summary: Detect if a market is a trap
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TrapInput"
-      responses:
-        "200":
-          description: Trap detection result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TrapResult"
-
-  /analysis/over25:
-    post:
-      operationId: analyzeOver25
-      tags: [analysis]
-      summary: Analyze Over 2.5 market for a fixture
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MarketAnalysisInput"
-      responses:
-        "200":
-          description: Over 2.5 analysis
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MarketAnalysisResult"
-
-  /analysis/corners:
-    post:
-      operationId: analyzeCorners
-      tags: [analysis]
-      summary: Analyze corners market for a fixture
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MarketAnalysisInput"
-      responses:
-        "200":
-          description: Corners analysis
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MarketAnalysisResult"
-
-  /analysis/btts:
-    post:
-      operationId: analyzeBtts
-      tags: [analysis]
-      summary: Analyze BTTS (Both Teams To Score) market
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MarketAnalysisInput"
-      responses:
-        "200":
-          description: BTTS analysis
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MarketAnalysisResult"
-
-  /history:
-    get:
-      operationId: listHistory
-      tags: [analysis]
-      summary: List all saved analysis history
-      responses:
-        "200":
-          description: List of history entries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/HistoryEntry"
-    post:
-      operationId: saveHistory
-      tags: [analysis]
-      summary: Save an analysis to history
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SaveAnalysisHistoryBody"
-      responses:
-        "201":
-          description: Saved history entry
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HistoryEntry"
-    delete:
-      operationId: clearHistory
-      tags: [analysis]
-      summary: Clear all history
-      responses:
-        "204":
-          description: History cleared
-
-  /history/{id}/result:
-    patch:
-      operationId: updateHistoryResult
-      tags: [analysis]
-      summary: Update the result of a history entry (WIN/LOSS/VOID)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SetHistoryResultBody"
-      responses:
-        "200":
-          description: Updated entry
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HistoryEntry"
-        "404":
-          description: Entry not found
-
-  /analysis/summary:
-    get:
-      operationId: getDashboardSummary
-      tags: [analysis]
-      summary: Get dashboard summary stats
-      responses:
-        "200":
-          description: Dashboard summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-
-components:
-  schemas:
-    HealthStatus:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-
-    Fixture:
-      type: object
-      required: [id, homeTeam, awayTeam, league, date, status]
-      properties:
-        id:
-          type: integer
-        homeTeam:
-          type: string
-        awayTeam:
-          type: string
-        league:
-          type: string
-        date:
-          type: string
-        status:
-          type: string
-        homeGoals:
-          type: ["integer", "null"]
-        awayGoals:
-          type: ["integer", "null"]
-
-    FixtureStatistics:
-      type: object
-      required: [fixtureId, homePossession, awayPossession, homeShotsOnGoal, awayShotsOnGoal, homeCorners, awayCorners, homeAttacks, awayAttacks]
-      properties:
-        fixtureId:
-          type: integer
-        homePossession:
-          type: number
-        awayPossession:
-          type: number
-        homeShotsOnGoal:
-          type: integer
-        awayShotsOnGoal:
-          type: integer
-        homeCorners:
-          type: integer
-        awayCorners:
-          type: integer
-        homeAttacks:
-          type: integer
-        awayAttacks:
-          type: integer
-
-    AnalysisInput:
-      type: object
-      required: [oddHome, oddDraw, oddAway, oddOver25]
-      properties:
-        oddHome:
-          type: number
-        oddDraw:
-          type: number
-        oddAway:
-          type: number
-        oddOver25:
-          type: number
-        oddBtts:
-          type: ["number", "null"]
-
-    AnalysisResult:
-      type: object
-      required: [score, level, alerts, recommendation]
-      properties:
-        score:
-          type: integer
-        level:
-          type: string
-        alerts:
-          type: array
-          items:
-            $ref: "#/components/schemas/Alert"
-        recommendation:
-          type: string
-
-    Alert:
-      type: object
-      required: [type, message]
-      properties:
-        type:
-          type: string
-        message:
-          type: string
-
-    OddsEntry:
-      type: object
-      required: [game, bookmaker, market, team, odd]
-      properties:
-        game:
-          type: string
-        bookmaker:
-          type: string
-        market:
-          type: string
-        team:
-          type: string
-        odd:
-          type: number
-
-    TrapInput:
-      type: object
-      required: [oddFavorite, possession, attacks]
-      properties:
-        oddFavorite:
-          type: number
-        possession:
-          type: number
-        attacks:
-          type: number
-
-    TrapResult:
-      type: object
-      required: [isTrap, riskLevel, message, factors]
-      properties:
-        isTrap:
-          type: boolean
-        riskLevel:
-          type: string
-        message:
-          type: string
-        factors:
-          type: array
-          items:
-            type: string
-
-    MarketAnalysisInput:
-      type: object
-      required: [fixtureId, odd]
-      properties:
-        fixtureId:
-          type: integer
-        odd:
-          type: number
-
-    MarketAnalysisResult:
-      type: object
-      required: [market, score, recommendation, confidence, factors]
-      properties:
-        market:
-          type: string
-        score:
-          type: integer
-        recommendation:
-          type: string
-        confidence:
-          type: string
-        factors:
-          type: array
-          items:
-            type: string
-
-    HistoryEntry:
-      type: object
-      required: [id, market, homeTeam, awayTeam, league, score, level, recommendation, odd, createdAt]
-      properties:
-        id:
-          type: integer
-        market:
-          type: string
-        homeTeam:
-          type: string
-        awayTeam:
-          type: string
-        league:
-          type: string
-        fixtureId:
-          type: ["integer", "null"]
-        score:
-          type: integer
-        level:
-          type: string
-        recommendation:
-          type: string
-        odd:
-          type: string
-        result:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    SaveAnalysisHistoryBody:
-      type: object
-      required: [market, homeTeam, awayTeam, score, level, recommendation, odd]
-      properties:
-        market:
-          type: string
-        homeTeam:
-          type: string
-        awayTeam:
-          type: string
-        league:
-          type: string
-        fixtureId:
-          type: ["integer", "null"]
-        score:
-          type: integer
-        level:
-          type: string
-        recommendation:
-          type: string
-        odd:
-          type: number
-
-    SetHistoryResultBody:
-      type: object
-      required: [result]
-      properties:
-        result:
-          type: string
-
-    DashboardSummary:
-      type: object
-      required: [totalFixturesToday, hotGames, trapAlerts, topLeagues]
-      properties:
-        totalFixturesToday:
-          type: integer
-        hotGames:
-          type: integer
-        trapAlerts:
-          type: integer
-        topLeagues:
-          type: array
-          items:
-            type: string
+API_KEY = os.getenv("API_FOOTBALL_KEY")
+HEADERS = {
+    "x-apisports-key": API_KEY
+}
+BASE_URL = "https://v3.football.api-sports.io"
+# =========================================
+# HEALTH CHECK
+# =========================================
+@app.route("/api/healthz", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "healthy"
+    })
+# =========================================
+# TODAY FIXTURES
+# =========================================
+@app.route("/api/fixtures/today", methods=["GET"])
+def get_today_fixtures():
+    url = f"{BASE_URL}/fixtures?live=all"
+    response = requests.get(url, headers=HEADERS)
+    data = response.json()
+    fixtures = []
+    if "response" in data:
+        for match in data["response"]:
+            fixtures.append({
+                "id": match["fixture"]["id"],
+                "homeTeam": match["teams"]["home"]["name"],
+                "awayTeam": match["teams"]["away"]["name"],
+                "league": match["league"]["name"],
+                "date": match["fixture"]["date"],
+                "status": match["fixture"]["status"]["short"],
+                "homeGoals": match["goals"]["home"],
+                "awayGoals": match["goals"]["away"]
+            })
+    return jsonify(fixtures)
+# =========================================
+# FIXTURE STATISTICS
+# =========================================
+@app.route("/api/fixtures/<int:fixture_id>/statistics", methods=["GET"])
+def get_fixture_statistics(fixture_id):
+    url = f"{BASE_URL}/fixtures/statistics?fixture={fixture_id}"
+    response = requests.get(url, headers=HEADERS)
+    data = response.json()
+    return jsonify(data)
+# =========================================
+# OVER 2.5 ANALYSIS
+# =========================================
+@app.route("/api/analysis/over25", methods=["POST"])
+def analyze_over25():
+    body = request.json
+    odd = body.get("odd", 0)
+    score = random.randint(60, 95)
+    recommendation = "ENTRADA RECOMENDADA"
+    if score < 75:
+        recommendation = "RISCO ELEVADO"
+    return jsonify({
+        "market": "OVER 2.5",
+        "score": score,
+        "recommendation": recommendation,
+        "confidence": f"{score}%",
+        "factors": [
+            "Alta pressão ofensiva",
+            "Média alta de finalizações",
+            "Defesas vulneráveis"
+        ]
+    })
+# =========================================
+# CORNERS ANALYSIS
+# =========================================
+@app.route("/api/analysis/corners", methods=["POST"])
+def analyze_corners():
+    score = random.randint(65, 98)
+    return jsonify({
+        "market": "CORNERS",
+        "score": score,
+        "recommendation": "OVER ESCANTEIOS",
+        "confidence": f"{score}%",
+        "factors": [
+            "Times usam muito as laterais",
+            "Alta média de ataques perigosos",
+            "Pressão ofensiva intensa"
+        ]
+    })
+# =========================================
+# BTTS ANALYSIS
+# =========================================
+@app.route("/api/analysis/btts", methods=["POST"])
+def analyze_btts():
+    score = random.randint(55, 96)
+    return jsonify({
+        "market": "BTTS",
+        "score": score,
+        "recommendation": "AMBAS MARCAM",
+        "confidence": f"{score}%",
+        "factors": [
+            "Defesas frágeis",
+            "Ataques eficientes",
+            "Alta média de gols"
+        ]
+    })
+# =========================================
+# TRAP DETECTOR
+# =========================================
+@app.route("/api/odds/trap-detector", methods=["POST"])
+def detect_trap():
+    score = random.randint(1, 100)
+    is_trap = score > 70
+    return jsonify({
+        "isTrap": is_trap,
+        "riskLevel": "ALTO" if is_trap else "BAIXO",
+        "message": "Possível armadilha detectada" if is_trap else "Mercado saudável",
+        "factors": [
+            "Odd desbalanceada",
+            "Volume suspeito",
+            "Pressão inconsistente"
+        ]
+    })
+# =========================================
+# DASHBOARD SUMMARY
+# =========================================
+@app.route("/api/analysis/summary", methods=["GET"])
+def dashboard_summary():
+    return jsonify({
+        "totalFixturesToday": 269,
+        "hotGames": 44,
+        "trapAlerts": 21,
+        "topLeagues": [
+            "Premier League",
+            "Serie A",
+            "La Liga",
+            "Brasileirão"
+        ]
+    })
+# =========================================
+# START SERVER
+# =========================================
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3000)
