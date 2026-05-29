@@ -33,7 +33,15 @@ paths:
     get:
       operationId: getTodayFixtures
       tags: [fixtures]
-      summary: Get today's fixtures
+      from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "API funcionando"
+
+app.run(host="0.0.0.0", port=3000)
       responses:
         "200":
           description: List of today's fixtures
